@@ -13,8 +13,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: false,
             retry: 1,
             retryDelay: 1000,
-            // Don't throw errors, just return undefined
-            useErrorBoundary: false,
           },
         },
       })
