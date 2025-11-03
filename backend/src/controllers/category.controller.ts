@@ -1,0 +1,70 @@
+import { Request, Response } from 'express';
+import { query } from '../database/connection';
+
+export async function getCategories(req: Request, res: Response) {
+  try {
+    const result = await query(
+      `SELECT c.*, 
+              (SELECT COUNT(*) FROM listings l WHERE l.category_id = c.id AND l.status = 'active') as items_count
+       FROM categories c 
+       WHERE c.is_active = true 
+       ORDER BY c.display_order, c.name`
+    );
+
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getCategoryBySlug(req: Request, res: Response) {
+  try {
+    const { slug } = req.params;
+
+    const result = await query(
+      'SELECT * FROM categories WHERE slug = $1 AND is_active = true',
+      [slug]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getCategoryListings(req: Request, res: Response) {
+  try {
+    const { slug } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    const category = await query('SELECT id FROM categories WHERE slug = $1', [slug]);
+
+    if (category.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    const result = await query(
+      `SELECT l.*, u.username,
+              (SELECT json_agg(json_build_object('id', li.id, 'image_url', li.image_url))
+               FROM listing_images li WHERE li.listing_id = l.id ORDER BY li.display_order LIMIT 1) as images
+       FROM listings l
+       JOIN users u ON l.user_id = u.id
+       WHERE l.category_id = $1 AND l.status = 'active'
+       ORDER BY l.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [category.rows[0].id, limit, (Number(page) - 1) * Number(limit)]
+    );
+
+    res.json({
+      listings: result.rows,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
