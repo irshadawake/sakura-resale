@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Heart } from 'lucide-react'
 
 interface Listing {
   id: string
@@ -93,7 +92,7 @@ export default function FreeGiveawaysPage() {
                 />
                 <div className="absolute top-2 right-2">
                   <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50">
-                    <Heart className="h-5 w-5 text-gray-600" />
+                    <span className="text-gray-600">♥</span>
                   </button>
                 </div>
                 <div className="absolute top-2 left-2">
