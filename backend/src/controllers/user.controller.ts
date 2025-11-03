@@ -69,7 +69,7 @@ export async function getUserListings(req: Request, res: Response) {
                FROM listing_images li WHERE li.listing_id = l.id ORDER BY li.display_order LIMIT 1) as images
        FROM listings l
        JOIN categories c ON l.category_id = c.id
-       WHERE l.user_id = $1 AND l.status = 'active'
+       WHERE l.user_id = $1
        ORDER BY l.created_at DESC
        LIMIT $2 OFFSET $3`,
       [id, limit, (Number(page) - 1) * Number(limit)]

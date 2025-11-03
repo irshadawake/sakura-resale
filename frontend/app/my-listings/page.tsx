@@ -27,9 +27,15 @@ export default function MyListingsPage() {
     try {
       setLoading(true)
       const data = await fetchUserListings(user!.id)
-      setListings(data.listings || [])
-    } catch (error) {
-      toast.error('Failed to load listings')
+      console.log('Fetched listings:', data)
+      // Handle both array response and object with listings property
+      const listingsArray = Array.isArray(data) ? data : (data.listings || [])
+      setListings(listingsArray)
+    } catch (error: any) {
+      console.error('Error loading listings:', error)
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to load listings'
+      toast.error(errorMsg)
+      setListings([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
