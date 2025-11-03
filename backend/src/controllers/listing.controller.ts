@@ -30,8 +30,15 @@ export async function getListings(req: AuthRequest, res: Response) {
     let paramIndex = 1;
 
     if (category) {
-      sql += ` AND l.category_id = $${paramIndex++}`;
-      params.push(category);
+      // Support both UUID and slug for category filter
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(category as string)) {
+        sql += ` AND l.category_id = $${paramIndex++}`;
+        params.push(category);
+      } else {
+        sql += ` AND c.slug = $${paramIndex++}`;
+        params.push(category);
+      }
     }
 
     if (search) {
