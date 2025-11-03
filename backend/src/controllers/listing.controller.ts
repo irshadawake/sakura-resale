@@ -19,8 +19,8 @@ export async function getListings(req: AuthRequest, res: Response) {
     let sql = `
       SELECT l.*, c.name as category_name, c.slug as category_slug,
              u.username, u.avatar_url as seller_avatar,
-             (SELECT json_agg(json_build_object('id', li.id, 'image_url', li.image_url, 'display_order', li.display_order))
-              FROM listing_images li WHERE li.listing_id = l.id ORDER BY li.display_order) as images
+             (SELECT json_agg(json_build_object('id', li.id, 'image_url', li.image_url, 'display_order', li.display_order) ORDER BY li.display_order)
+              FROM listing_images li WHERE li.listing_id = l.id) as images
       FROM listings l
       JOIN categories c ON l.category_id = c.id
       JOIN users u ON l.user_id = u.id
