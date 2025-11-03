@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { fetchListingById } from '@/lib/api'
 
 interface Listing {
   id: string
@@ -42,9 +43,7 @@ export default function ListingDetailPage() {
 
   const fetchListing = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/listings/${id}`)
-      if (!response.ok) throw new Error('Failed to fetch listing')
-      const data = await response.json()
+      const data = await fetchListingById(id)
       setListing(data)
       
       // Fetch seller info
@@ -60,7 +59,7 @@ export default function ListingDetailPage() {
 
   const fetchSeller = async (userId: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/users/${userId}`)
+      const response = await fetch(`http://localhost:4000/api/v1/users/${userId}`)
       if (response.ok) {
         const data = await response.json()
         setSeller(data)

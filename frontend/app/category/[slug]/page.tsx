@@ -28,7 +28,7 @@ export default function CategoryPage() {
 
   const fetchCategoryListings = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/listings?category=${slug}`)
+      const response = await fetch(`http://localhost:4000/api/v1/listings?category=${slug}`)
       if (!response.ok) throw new Error('Failed to fetch listings')
       const data = await response.json()
       setListings(data.listings || [])

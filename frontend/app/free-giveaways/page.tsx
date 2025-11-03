@@ -24,7 +24,7 @@ export default function FreeGiveawaysPage() {
 
   const fetchFreeListings = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/listings?is_free=true')
+      const response = await fetch('http://localhost:4000/api/v1/listings?is_free=true')
       if (!response.ok) throw new Error('Failed to fetch free listings')
       const data = await response.json()
       setListings(data.listings || [])
