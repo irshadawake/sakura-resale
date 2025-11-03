@@ -12,8 +12,10 @@ interface User {
 interface AuthState {
   user: User | null
   token: string | null
+  isHydrated: boolean
   setAuth: (user: User, token: string) => void
   logout: () => void
+  setHydrated: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -21,17 +23,24 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      isHydrated: false,
       setAuth: (user, token) => {
-        localStorage.setItem('token', token)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', token)
+        }
         set({ user, token })
       },
       logout: () => {
-        localStorage.removeItem('token')
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token')
+        }
         set({ user: null, token: null })
       },
+      setHydrated: () => set({ isHydrated: true }),
     }),
     {
       name: 'auth-storage',
+      skipHydration: true,
     }
   )
 )
