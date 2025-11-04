@@ -67,7 +67,7 @@ export async function getListings(req: AuthRequest, res: Response) {
       params.push(prefecture);
     }
 
-    if (is_free === true) {
+    if (is_free) {
       sql += ` AND l.is_free = true`;
     }
 

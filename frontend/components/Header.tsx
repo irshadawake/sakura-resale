@@ -7,14 +7,12 @@ import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const router = useRouter()
-  const { user, logout } = useAuthStore()
+  const { user, logout, isHydrated } = useAuthStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Don't show user-specific UI until hydrated
+  const showUser = isHydrated && user
 
   const handleLogout = () => {
     logout()
@@ -40,10 +38,10 @@ export default function Header() {
             <Link href="/categories" className="text-gray-700 hover:text-sakura-pink transition-colors">
               Categories
             </Link>
-            <Link href="/free-giveaways" className="text-gray-700 hover:text-sakura-pink transition-colors">
+            <Link href="/category/free-giveaways" className="text-gray-700 hover:text-sakura-pink transition-colors">
               Free Giveaways
             </Link>
-            {user && (
+            {showUser && (
               <Link href="/my-listings" className="text-gray-700 hover:text-sakura-pink transition-colors">
                 My Listings
               </Link>
@@ -52,7 +50,7 @@ export default function Header() {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {mounted && user ? (
+            {showUser ? (
               <>
                 <Link href="/listings/create" className="btn-primary">
                   + Post Ad
@@ -63,9 +61,9 @@ export default function Header() {
                     className="flex items-center space-x-2 text-gray-700 hover:text-sakura-pink"
                   >
                     <div className="w-8 h-8 bg-sakura-pink text-white rounded-full flex items-center justify-center font-semibold">
-                      {user.username?.charAt(0).toUpperCase()}
+                      {user?.username?.charAt(0).toUpperCase()}
                     </div>
-                    <span>{user.username}</span>
+                    <span>{user?.username}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -136,8 +134,8 @@ export default function Header() {
             <nav className="flex flex-col space-y-4">
               <Link href="/" className="text-gray-700">Home</Link>
               <Link href="/categories" className="text-gray-700">Categories</Link>
-              <Link href="/free-giveaways" className="text-gray-700">Free Giveaways</Link>
-              {user ? (
+              <Link href="/category/free-giveaways" className="text-gray-700">Free Giveaways</Link>
+              {showUser ? (
                 <>
                   <Link href="/my-listings" className="text-gray-700">My Listings</Link>
                   <button onClick={logout} className="text-left text-gray-700">Logout</button>

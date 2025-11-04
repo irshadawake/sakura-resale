@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { fetchListings } from '@/lib/api'
 
 interface Listing {
   id: string
@@ -28,11 +29,17 @@ export default function CategoryPage() {
 
   const fetchCategoryListings = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/v1/listings?category=${slug}`)
-      if (!response.ok) throw new Error('Failed to fetch listings')
-      const data = await response.json()
+      // Handle free-giveaways as a special filter, not a category
+      const params = slug === 'free-giveaways' 
+        ? { is_free: 'true' } 
+        : { category: slug }
+      
+      const data = await fetchListings(params)
       setListings(data.listings || [])
-      if (data.listings && data.listings.length > 0) {
+      
+      if (slug === 'free-giveaways') {
+        setCategoryName('Free Giveaways')
+      } else if (data.listings && data.listings.length > 0) {
         setCategoryName(data.listings[0].category_name)
       } else {
         setCategoryName(slug.charAt(0).toUpperCase() + slug.slice(1))
