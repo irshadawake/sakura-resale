@@ -58,6 +58,46 @@ export async function updateProfile(req: AuthRequest, res: Response) {
   }
 }
 
+export async function changePassword(req: AuthRequest, res: Response) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const bcrypt = require('bcryptjs');
+
+    // Get current user with password
+    const userResult = await query(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [req.user!.id]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(
+      currentPassword,
+      userResult.rows[0].password_hash
+    );
+
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [hashedPassword, req.user!.id]
+    );
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 export async function getUserListings(req: Request, res: Response) {
   try {
     const { id } = req.params;

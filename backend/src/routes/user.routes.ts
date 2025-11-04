@@ -20,6 +20,18 @@ router.put(
   ],
   userController.updateProfile
 );
+router.put(
+  '/change-password',
+  authenticate,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 8 })
+      .withMessage('New password must be at least 8 characters'),
+    validate,
+  ],
+  userController.changePassword
+);
 router.get('/:id/listings', userController.getUserListings);
 
 export default router;
