@@ -136,13 +136,30 @@ export async function getListingById(req: AuthRequest, res: Response) {
 
 export async function createListing(req: AuthRequest, res: Response) {
   try {
-    const { title, description, category_id, price, is_free, condition, location, city, prefecture } = req.body;
+    const { 
+      title, description, category_id, price, is_free, condition, location, city, prefecture,
+      is_bulk_sale, bulk_items_description, price_per_item 
+    } = req.body;
 
     const result = await query(
-      `INSERT INTO listings (user_id, category_id, title, description, price, is_free, condition, location, city, prefecture)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO listings (user_id, category_id, title, description, price, is_free, condition, location, city, prefecture, is_bulk_sale, bulk_items_description, price_per_item)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
-      [req.user!.id, category_id, title, description, price || null, is_free || false, condition, location, city || null, prefecture]
+      [
+        req.user!.id, 
+        category_id, 
+        title, 
+        description, 
+        price || null, 
+        is_free || false, 
+        condition, 
+        location, 
+        city || null, 
+        prefecture,
+        is_bulk_sale || false,
+        bulk_items_description || null,
+        price_per_item || false
+      ]
     );
 
     res.status(201).json(result.rows[0]);

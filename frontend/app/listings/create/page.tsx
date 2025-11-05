@@ -21,7 +21,13 @@ export default function CreateListingPage() {
     location: '',
     city: '',
     prefecture: '',
+    is_bulk_sale: false,
+    bulk_items_description: '',
+    price_per_item: false,
   })
+
+  const selectedCategory = categories.find(c => c.id === formData.category_id)
+  const isBundleSaleCategory = selectedCategory?.slug === 'bulk-sale'
 
   useEffect(() => {
     if (!user) {
@@ -76,6 +82,13 @@ export default function CreateListingPage() {
       } else {
         submitData.append('is_free', 'false')
         submitData.append('price', formData.price)
+      }
+
+      // Add bundle sale fields if applicable
+      if (isBundleSaleCategory) {
+        submitData.append('is_bulk_sale', 'true')
+        submitData.append('bulk_items_description', formData.bulk_items_description)
+        submitData.append('price_per_item', formData.price_per_item ? 'true' : 'false')
       }
 
       await createListing(submitData)
@@ -177,6 +190,76 @@ export default function CreateListingPage() {
               ))}
             </select>
           </div>
+
+          {/* Bundle Sale Fields */}
+          {isBundleSaleCategory && (
+            <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6 space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <span className="text-2xl">📦</span>
+                <h3 className="text-lg font-semibold text-orange-900">Bundle Sale Details</h3>
+              </div>
+              
+              <div>
+                <label htmlFor="bulk_items_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  List of Items in Bundle <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="bulk_items_description"
+                  name="bulk_items_description"
+                  required={isBundleSaleCategory}
+                  rows={6}
+                  value={formData.bulk_items_description}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="List all items included in this bundle:
+e.g.,
+- Queen bed with mattress
+- 2-seater sofa (gray)
+- Dining table with 4 chairs
+- TV stand
+- Microwave oven
+- Rice cooker
+- Vacuum cleaner"
+                />
+                <p className="text-xs text-gray-600 mt-1">
+                  List each item clearly. Buyers want to know exactly what they're getting!
+                </p>
+              </div>
+
+              <div>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="price_per_item"
+                    checked={formData.price_per_item}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Price is per item (not total)
+                    </span>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Check this if the price shown is for each individual item.
+                      Example: ¥2,000 per item × 10 items = ¥20,000 total
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-orange-200">
+                <p className="text-sm text-gray-700">
+                  <strong>💡 Bundle Sale Tips:</strong>
+                </p>
+                <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
+                  <li>Be specific about item conditions</li>
+                  <li>Include measurements for furniture</li>
+                  <li>Mention if items must be sold together</li>
+                  <li>Take photos of all items if possible</li>
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Price / Free */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
