@@ -204,11 +204,13 @@ export default function CreateListingPage() {
               className="input-field text-lg"
             >
               <option value="">Select a category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.icon} {category.name}
-                </option>
-              ))}
+              {categories
+                .filter(category => category.slug !== 'free-giveaways')
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.icon} {category.name}
+                  </option>
+                ))}
             </select>
             {isBundleSaleCategory && (
               <p className="mt-3 text-sm text-orange-700 bg-orange-50 p-3 rounded">

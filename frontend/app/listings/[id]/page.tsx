@@ -15,6 +15,9 @@ interface Listing {
   location: string
   status: string
   category_name: string
+  category_slug: string
+  is_bulk_sale: boolean
+  bulk_items_description: string | null
   images: Array<{ id: string; image_url: string; display_order: number }> | null
   user_id: string
   created_at: string
@@ -183,6 +186,26 @@ export default function ListingDetailPage() {
               <h2 className="text-lg font-semibold mb-3">Description</h2>
               <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
             </div>
+
+            {/* Bundle Items */}
+            {listing.is_bulk_sale && listing.bulk_items_description && (
+              <div className="mb-6 pb-6 border-b">
+                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                  <span className="mr-2">📦</span>
+                  Bundle Items
+                </h2>
+                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                  <ul className="space-y-2">
+                    {listing.bulk_items_description.split('\n').map((item, index) => (
+                      <li key={index} className="text-gray-700 flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
 
             {/* Seller Info */}
             {seller && (
