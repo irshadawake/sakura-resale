@@ -10,6 +10,7 @@ const categoryIcons: Record<string, string> = {
   clothing: '👕',
   books: '📚',
   sports: '⚽',
+  'home-appliances': '🏠',
   'free-giveaways': '🎁',
 }
 
