@@ -49,7 +49,9 @@ export default function CreateListingPage() {
   }
 
   // Find the actual selected category from either parent or subcategories
-  const selectedCategory = [...parentCategories, ...subcategories].find(c => c.id === formData.category_id)
+  // When parent has no subcategories, use the selected parent
+  const currentCategoryId = formData.category_id || (subcategories.length === 0 ? selectedParentId : '')
+  const selectedCategory = [...parentCategories, ...subcategories].find(c => c.id === currentCategoryId)
   const isBundleSaleCategory = selectedCategory?.slug === 'bulk-sale'
 
   useEffect(() => {
