@@ -342,30 +342,23 @@ export default function CreateListingPage() {
                         placeholder="Size, color, brand, etc. (optional)"
                       />
                     </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Price for this item (optional if available separately)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.price}
+                        onChange={(e) => updateBundleItem(index, 'price', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="e.g., 5000"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Leave empty if not selling separately</p>
+                    </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Pricing Model */}
-              <div className="bg-white rounded-lg p-4 border border-orange-200">
-                <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="price_per_item"
-                    checked={formData.price_per_item}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Price is per item (not total)
-                    </span>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Check this if the price shown is for each individual item.
-                      Example: ¥2,000 per item × {bundleItems.length || 'X'} items = ¥{formData.price ? (parseInt(formData.price) * bundleItems.length).toLocaleString() : 'X,XXX'} total
-                    </p>
-                  </div>
-                </label>
               </div>
 
               {/* Tips */}
@@ -412,31 +405,33 @@ export default function CreateListingPage() {
                   className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  This item is FREE (giveaway)
+                  {isBundleSaleCategory ? 'This bundle is FREE (giveaway)' : 'This item is FREE (giveaway)'}
                 </span>
               </label>
             </div>
           </div>
 
-          {/* Condition */}
-          <div>
-            <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-2">
-              Condition <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="condition"
-              name="condition"
-              required
-              value={formData.condition}
-              onChange={handleChange}
-              className="input-field"
-            >
-              <option value="Like New">Like New</option>
-              <option value="Good">Good</option>
-              <option value="Fair">Fair</option>
-              <option value="Poor">Poor</option>
-            </select>
-          </div>
+          {/* Condition - hide for bundle sales since each item has its own */}
+          {!isBundleSaleCategory && (
+            <div>
+              <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-2">
+                Condition <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="condition"
+                name="condition"
+                required
+                value={formData.condition}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="Like New">Like New</option>
+                <option value="Good">Good</option>
+                <option value="Fair">Fair</option>
+                <option value="Poor">Poor</option>
+              </select>
+            </div>
+          )}
 
           {/* Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
