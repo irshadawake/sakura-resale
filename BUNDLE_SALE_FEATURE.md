@@ -1,7 +1,7 @@
-# Bulk Sale Feature
+# Bundle Sale Feature
 
 ## Overview
-The Bulk Sale category allows users to sell multiple items together, perfect for moving out, decluttering, or estate sales.
+The Bundle Sale category allows users to sell multiple items together, perfect for moving out, decluttering, or estate sales.
 
 ## Database Schema
 
@@ -21,7 +21,7 @@ The Bulk Sale category allows users to sell multiple items together, perfect for
    - User sets price, indicates it's per item
    - Example: "¥2,000 per item" (10 items = ¥20,000 total)
 
-### Creating a Bulk Sale Listing
+### Creating a Bundle Sale Listing
 
 #### Example 1: Moving Out Sale
 ```json
@@ -40,7 +40,7 @@ The Bulk Sale category allows users to sell multiple items together, perfect for
 ```json
 {
   "category_id": "f5d7e8f7-e6ed-4828-8971-d3f2ec27a776",
-  "title": "Kitchen Items Bulk Sale",
+  "title": "Kitchen Items Bundle Sale",
   "description": "Downsizing - various kitchen items",
   "price": 5000,
   "is_bulk_sale": true,
@@ -52,8 +52,8 @@ The Bulk Sale category allows users to sell multiple items together, perfect for
 ## UI/UX Features
 
 ### Display
-- Bulk Sale category has special orange highlight
-- Listings show badge "BULK SALE" 
+- Bundle Sale category has special orange highlight
+- Listings show badge "BUNDLE SALE" 
 - Items list displayed prominently
 - Clear pricing information (total vs per item)
 
@@ -65,20 +65,20 @@ The Bulk Sale category allows users to sell multiple items together, perfect for
 
 ### ✅ Completed
 - Database schema updated
-- Categories created (Bulk Sale, Houses & Apartments, Jobs & Services)
+- Categories created (Bundle Sale, Houses & Apartments, Jobs & Services)
 - Category icons and styling added
-- Backend support for bulk sale fields
+- Backend support for bundle sale fields
 
 ### 🔄 To Implement
-- Update create listing form to support bulk sale fields
-- Add UI toggle for "Is this a bulk sale?"
+- Update create listing form to support bundle sale fields
+- Add UI toggle for "Is this a bundle sale?"
 - Add textarea for bulk items description
 - Add toggle for pricing model (total vs per item)
-- Display bulk sale badge on listing cards
+- Display bundle sale badge on listing cards
 - Show items list in listing detail page
 
 ## Future Enhancements
 - Allow sellers to upload multiple images per item in bulk
 - Add item-by-item breakdown with individual pricing
 - Enable partial purchase (if seller agrees)
-- Add templates for common bulk sale scenarios
+- Add templates for common bundle sale scenarios
