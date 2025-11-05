@@ -30,7 +30,20 @@ export default function CreateListingPage() {
     name: string
     condition: string
     description: string
+    price: string
+    can_sell_separately: boolean
   }>>([])
+
+  const MAX_BUNDLE_ITEMS = 10
+
+  // Calculate total price from individual items
+  const calculateTotalPrice = () => {
+    const total = bundleItems.reduce((sum, item) => {
+      const itemPrice = parseFloat(item.price) || 0
+      return sum + itemPrice
+    }, 0)
+    return total
+  }
 
   const selectedCategory = categories.find(c => c.id === formData.category_id)
   const isBundleSaleCategory = selectedCategory?.slug === 'bulk-sale'
@@ -132,17 +145,33 @@ export default function CreateListingPage() {
   }
 
   const addBundleItem = () => {
-    setBundleItems([...bundleItems, { name: '', condition: 'Good', description: '' }])
+    if (bundleItems.length >= MAX_BUNDLE_ITEMS) {
+      toast.error(`Maximum ${MAX_BUNDLE_ITEMS} items allowed per bundle`)
+      return
+    }
+    setBundleItems([...bundleItems, { 
+      name: '', 
+      condition: 'Good', 
+      description: '', 
+      price: '',
+      can_sell_separately: false 
+    }])
   }
 
   const removeBundleItem = (index: number) => {
     setBundleItems(bundleItems.filter((_, i) => i !== index))
   }
 
-  const updateBundleItem = (index: number, field: string, value: string) => {
+  const updateBundleItem = (index: number, field: string, value: string | boolean) => {
     const updated = [...bundleItems]
     updated[index] = { ...updated[index], [field]: value }
     setBundleItems(updated)
+    
+    // Auto-update total price when item prices change
+    if (field === 'price' && isBundleSaleCategory) {
+      const total = calculateTotalPrice()
+      setFormData({ ...formData, price: total.toString() })
+    }
   }
 
   const japanPrefectures = [
@@ -161,49 +190,10 @@ export default function CreateListingPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
-          {/* Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              required
-              minLength={5}
-              maxLength={255}
-              value={formData.title}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="e.g., iPhone 13 Pro - Excellent Condition"
-            />
-            <p className="text-xs text-gray-500 mt-1">At least 5 characters</p>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              required
-              minLength={20}
-              rows={5}
-              value={formData.description}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="Describe your item in detail..."
-            />
-            <p className="text-xs text-gray-500 mt-1">At least 20 characters</p>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
-              Category <span className="text-red-500">*</span>
+          {/* Category - MOVED TO TOP */}
+          <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+            <label htmlFor="category_id" className="block text-lg font-semibold text-gray-900 mb-3">
+              Step 1: Select Category <span className="text-red-500">*</span>
             </label>
             <select
               id="category_id"
@@ -211,7 +201,7 @@ export default function CreateListingPage() {
               required
               value={formData.category_id}
               onChange={handleChange}
-              className="input-field"
+              className="input-field text-lg"
             >
               <option value="">Select a category</option>
               {categories.map((category) => (
@@ -220,7 +210,54 @@ export default function CreateListingPage() {
                 </option>
               ))}
             </select>
+            {isBundleSaleCategory && (
+              <p className="mt-3 text-sm text-orange-700 bg-orange-50 p-3 rounded">
+                📦 <strong>Bundle Sale:</strong> You can add up to {MAX_BUNDLE_ITEMS} items in this listing
+              </p>
+            )}
           </div>
+
+          {/* General Title & Description */}
+          {formData.category_id && (
+            <>
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                  {isBundleSaleCategory ? 'Bundle Title' : 'Title'} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  required
+                  minLength={5}
+                  maxLength={255}
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder={isBundleSaleCategory ? "e.g., Moving Out Sale - Complete Apartment Furniture" : "e.g., iPhone 13 Pro - Excellent Condition"}
+                />
+                <p className="text-xs text-gray-500 mt-1">At least 5 characters</p>
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  {isBundleSaleCategory ? 'General Description' : 'Description'} <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  minLength={20}
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder={isBundleSaleCategory ? "Describe the overall bundle, reason for selling, pickup details, etc." : "Describe your item in detail..."}
+                />
+                <p className="text-xs text-gray-500 mt-1">At least 20 characters</p>
+              </div>
+            </>
+          )}
 
           {/* Bundle Sale Fields */}
           {isBundleSaleCategory && (
