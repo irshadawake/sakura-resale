@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
-import { createListing, fetchCategories } from '@/lib/api'
+import { createListing } from '@/lib/api'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 
 export default function CreateListingPage() {
   const router = useRouter()
   const user = useAuthStore((state) => state.user)
   const [loading, setLoading] = useState(false)
-  const [categories, setCategories] = useState<any[]>([])
+  const [parentCategories, setParentCategories] = useState<any[]>([])
+  const [subcategories, setSubcategories] = useState<any[]>([])
+  const [selectedParentId, setSelectedParentId] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,7 +48,8 @@ export default function CreateListingPage() {
     return total
   }
 
-  const selectedCategory = categories.find(c => c.id === formData.category_id)
+  // Find the actual selected category from either parent or subcategories
+  const selectedCategory = [...parentCategories, ...subcategories].find(c => c.id === formData.category_id)
   const isBundleSaleCategory = selectedCategory?.slug === 'bulk-sale'
 
   useEffect(() => {
@@ -60,17 +64,50 @@ export default function CreateListingPage() {
 
   const loadCategories = async () => {
     try {
-      const data = await fetchCategories()
-      setCategories(data)
+      // Fetch only parent categories
+      const response = await axios.get('http://localhost:4000/api/v1/categories?parent_only=true')
+      // Filter out free-giveaways
+      const filtered = response.data.filter((cat: any) => cat.slug !== 'free-giveaways')
+      setParentCategories(filtered)
     } catch (error) {
       toast.error('Failed to load categories')
     }
   }
 
+  const loadSubcategories = async (parentSlug: string) => {
+    try {
+      const response = await axios.get(`http://localhost:4000/api/v1/categories/${parentSlug}/subcategories`)
+      setSubcategories(response.data)
+    } catch (error) {
+      console.error('Failed to load subcategories:', error)
+      setSubcategories([])
+    }
+  }
+
+  const handleParentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const parentId = e.target.value
+    setSelectedParentId(parentId)
+    
+    if (parentId) {
+      const parent = parentCategories.find(c => c.id === parentId)
+      if (parent) {
+        loadSubcategories(parent.slug)
+      }
+    } else {
+      setSubcategories([])
+    }
+    
+    // Reset category selection when parent changes
+    setFormData({ ...formData, category_id: '' })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.category_id) {
+    // Use parent category if no subcategories exist
+    const finalCategoryId = formData.category_id || (subcategories.length === 0 ? selectedParentId : '')
+    
+    if (!finalCategoryId) {
       toast.error('Please select a category')
       return
     }
@@ -86,7 +123,7 @@ export default function CreateListingPage() {
       const submitData = new FormData()
       submitData.append('title', formData.title)
       submitData.append('description', formData.description)
-      submitData.append('category_id', formData.category_id)
+      submitData.append('category_id', finalCategoryId)
       submitData.append('condition', formData.condition)
       submitData.append('location', formData.location)
       submitData.append('prefecture', formData.prefecture)
@@ -190,28 +227,65 @@ export default function CreateListingPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
-          {/* Category - MOVED TO TOP */}
-          <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
-            <label htmlFor="category_id" className="block text-lg font-semibold text-gray-900 mb-3">
+          {/* Category - Two-step selection */}
+          <div className="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 space-y-4">
+            <label className="block text-lg font-semibold text-gray-900">
               Step 1: Select Category <span className="text-red-500">*</span>
             </label>
-            <select
-              id="category_id"
-              name="category_id"
-              required
-              value={formData.category_id}
-              onChange={handleChange}
-              className="input-field text-lg"
-            >
-              <option value="">Select a category</option>
-              {categories
-                .filter(category => category.slug !== 'free-giveaways')
-                .map((category) => (
+            
+            {/* Parent Category */}
+            <div>
+              <label htmlFor="parent_category" className="block text-sm font-medium text-gray-700 mb-2">
+                Main Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="parent_category"
+                value={selectedParentId}
+                onChange={handleParentChange}
+                className="input-field"
+              >
+                <option value="">Select main category</option>
+                {parentCategories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.icon} {category.name}
                   </option>
                 ))}
-            </select>
+              </select>
+            </div>
+
+            {/* Subcategory - shown when parent is selected */}
+            {selectedParentId && (
+              <div>
+                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-2">
+                  Subcategory <span className="text-red-500">*</span>
+                </label>
+                {subcategories.length > 0 ? (
+                  <select
+                    id="category_id"
+                    name="category_id"
+                    required
+                    value={formData.category_id}
+                    onChange={handleChange}
+                    className="input-field"
+                  >
+                    <option value="">Select subcategory</option>
+                    {subcategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.icon || '•'} {category.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      This category has no subcategories. You can post directly under this category.
+                    </p>
+                    <input type="hidden" name="category_id" value={selectedParentId} />
+                  </div>
+                )}
+              </div>
+            )}
+
             {isBundleSaleCategory && (
               <p className="mt-3 text-sm text-orange-700 bg-orange-50 p-3 rounded">
                 📦 <strong>Bundle Sale:</strong> You can add up to {MAX_BUNDLE_ITEMS} items in this listing
@@ -220,7 +294,7 @@ export default function CreateListingPage() {
           </div>
 
           {/* General Title & Description */}
-          {formData.category_id && (
+          {(formData.category_id || (selectedParentId && subcategories.length === 0)) && (
             <>
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
