@@ -49,6 +49,9 @@ export default function Hero() {
                 <option value="books">Books</option>
                 <option value="sports">Sports</option>
                 <option value="home-appliances">Home Appliances</option>
+                <option value="houses-apartments">Houses & Apartments</option>
+                <option value="jobs-services">Jobs & Services</option>
+                <option value="bulk-sale">Bulk Sale</option>
                 <option value="free-giveaways">Free Giveaways</option>
               </select>
               <button

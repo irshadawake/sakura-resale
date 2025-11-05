@@ -11,6 +11,9 @@ const categoryIcons: Record<string, string> = {
   books: '📚',
   sports: '⚽',
   'home-appliances': '🏠',
+  'houses-apartments': '🏘️',
+  'jobs-services': '💼',
+  'bulk-sale': '📦',
   'free-giveaways': '🎁',
 }
 
@@ -49,18 +52,23 @@ export default function CategoryGrid() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {displayCategories?.map((category: any) => {
           const isFreeGiveaway = category.slug === 'free-giveaways'
+          const isBulkSale = category.slug === 'bulk-sale'
           return (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
               className={`card p-8 text-center hover:scale-105 transition-transform ${
                 isFreeGiveaway ? 'bg-green-50 border-2 border-green-400' : ''
+              } ${
+                isBulkSale ? 'bg-orange-50 border-2 border-orange-400' : ''
               }`}
             >
               <div className="text-5xl mb-4">
                 {categoryIcons[category.slug] || '📦'}
               </div>
-              <h3 className={`font-semibold text-lg ${isFreeGiveaway ? 'text-green-700' : 'text-gray-800'}`}>
+              <h3 className={`font-semibold text-lg ${
+                isFreeGiveaway ? 'text-green-700' : isBulkSale ? 'text-orange-700' : 'text-gray-800'
+              }`}>
                 {category.name}
               </h3>
               <p className="text-sm text-gray-500 mt-2">
