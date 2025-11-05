@@ -2,39 +2,22 @@
 
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { fetchCategories } from '@/lib/api'
-
-const categoryIcons: Record<string, string> = {
-  electronics: '📱',
-  furniture: '🪑',
-  clothing: '👕',
-  books: '📚',
-  sports: '⚽',
-  'home-appliances': '🏠',
-  'houses-apartments': '🏘️',
-  'jobs-services': '💼',
-  'bulk-sale': '📦',
-  'free-giveaways': '🎁',
-}
-
-// Mock data for when backend is not available
-const mockCategories = [
-  { id: '1', name: 'Electronics', slug: 'electronics', items_count: 1234 },
-  { id: '2', name: 'Furniture', slug: 'furniture', items_count: 856 },
-  { id: '3', name: 'Clothing', slug: 'clothing', items_count: 2341 },
-  { id: '4', name: 'Books', slug: 'books', items_count: 567 },
-  { id: '5', name: 'Sports', slug: 'sports', items_count: 423 },
-  { id: '6', name: 'Free Giveaways', slug: 'free-giveaways', items_count: 86 },
-]
+import axios from 'axios'
 
 export default function CategoryGrid() {
-  const { data: categories, isLoading, error } = useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchCategories,
+  const MAX_VISIBLE = 12
+  
+  // Fetch only parent categories
+  const { data: categories, isLoading } = useQuery({
+    queryKey: ['categories', 'parent'],
+    queryFn: async () => {
+      const response = await axios.get('http://localhost:4000/api/v1/categories?parent_only=true')
+      return response.data
+    },
   })
 
-  // Use mock data if API fails
-  const displayCategories = categories || mockCategories
+  // Show only first 12 categories
+  const displayCategories = categories?.slice(0, MAX_VISIBLE) || []
 
   if (isLoading) {
     return (
@@ -49,34 +32,44 @@ export default function CategoryGrid() {
       <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
         Browse Categories
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-        {displayCategories?.map((category: any) => {
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {displayCategories.map((category: any) => {
           const isFreeGiveaway = category.slug === 'free-giveaways'
           const isBulkSale = category.slug === 'bulk-sale'
           return (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
-              className={`card p-8 text-center hover:scale-105 transition-transform ${
+              className={`card p-6 text-center hover:scale-105 transition-transform ${
                 isFreeGiveaway ? 'bg-green-50 border-2 border-green-400' : ''
               } ${
                 isBulkSale ? 'bg-orange-50 border-2 border-orange-400' : ''
               }`}
             >
-              <div className="text-5xl mb-4">
-                {categoryIcons[category.slug] || '📦'}
+              <div className="text-4xl mb-3">
+                {category.icon || '📦'}
               </div>
-              <h3 className={`font-semibold text-lg ${
+              <h3 className={`font-semibold text-base ${
                 isFreeGiveaway ? 'text-green-700' : isBulkSale ? 'text-orange-700' : 'text-gray-800'
               }`}>
                 {category.name}
               </h3>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {category.items_count || 0} items
               </p>
             </Link>
           )
         })}
+      </div>
+      
+      {/* View More Button */}
+      <div className="text-center mt-8">
+        <Link
+          href="/categories"
+          className="inline-block px-8 py-3 bg-sakura-pink text-white rounded-lg font-semibold hover:bg-sakura-dark transition-colors"
+        >
+          View All Categories
+        </Link>
       </div>
     </div>
   )

@@ -3,12 +3,40 @@ import { query } from '../database/connection';
 
 export async function getCategories(req: Request, res: Response) {
   try {
+    const { parent_only } = req.query;
+    
+    let sql = `SELECT c.*, 
+              (SELECT COUNT(*) FROM listings l WHERE l.category_id = c.id AND l.status = 'active') as items_count
+       FROM categories c 
+       WHERE c.is_active = true`;
+    
+    // If parent_only=true, only return top-level categories
+    if (parent_only === 'true') {
+      sql += ` AND c.parent_id IS NULL`;
+    }
+    
+    sql += ` ORDER BY c.display_order, c.name`;
+    
+    const result = await query(sql);
+
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getSubcategories(req: Request, res: Response) {
+  try {
+    const { parent_slug } = req.params;
+    
     const result = await query(
       `SELECT c.*, 
               (SELECT COUNT(*) FROM listings l WHERE l.category_id = c.id AND l.status = 'active') as items_count
        FROM categories c 
-       WHERE c.is_active = true 
-       ORDER BY c.display_order, c.name`
+       WHERE c.parent_id = (SELECT id FROM categories WHERE slug = $1)
+         AND c.is_active = true
+       ORDER BY c.display_order, c.name`,
+      [parent_slug]
     );
 
     res.json(result.rows);
