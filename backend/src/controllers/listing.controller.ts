@@ -36,8 +36,13 @@ export async function getListings(req: AuthRequest, res: Response) {
         sql += ` AND l.category_id = $${paramIndex++}`;
         params.push(category);
       } else {
-        sql += ` AND c.slug = $${paramIndex++}`;
+        // Check if this is a parent category and include subcategories
+        sql += ` AND (c.slug = $${paramIndex} OR c.id IN (
+          SELECT id FROM categories 
+          WHERE parent_id = (SELECT id FROM categories WHERE slug = $${paramIndex})
+        ))`;
         params.push(category);
+        paramIndex++;
       }
     }
 

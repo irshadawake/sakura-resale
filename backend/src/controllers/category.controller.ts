@@ -83,22 +83,34 @@ export async function getCategoryListings(req: Request, res: Response) {
     const { slug } = req.params;
     const { page = 1, limit = 20 } = req.query;
 
-    const category = await query('SELECT id FROM categories WHERE slug = $1', [slug]);
+    const category = await query(
+      'SELECT id, parent_id FROM categories WHERE slug = $1', 
+      [slug]
+    );
 
     if (category.rows.length === 0) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
+    const categoryId = category.rows[0].id;
+    const isParent = category.rows[0].parent_id === null;
+
+    // If this is a parent category, include all subcategories
+    // Otherwise, just get listings for this specific category
     const result = await query(
-      `SELECT l.*, u.username,
+      `SELECT l.*, u.username, c.name as category_name,
               (SELECT json_agg(json_build_object('id', li.id, 'image_url', li.image_url))
                FROM listing_images li WHERE li.listing_id = l.id ORDER BY li.display_order LIMIT 1) as images
        FROM listings l
        JOIN users u ON l.user_id = u.id
-       WHERE l.category_id = $1 AND l.status = 'active'
+       JOIN categories c ON l.category_id = c.id
+       WHERE ${isParent 
+         ? '(l.category_id = $1 OR l.category_id IN (SELECT id FROM categories WHERE parent_id = $1))' 
+         : 'l.category_id = $1'}
+         AND l.status = 'active'
        ORDER BY l.created_at DESC
        LIMIT $2 OFFSET $3`,
-      [category.rows[0].id, limit, (Number(page) - 1) * Number(limit)]
+      [categoryId, limit, (Number(page) - 1) * Number(limit)]
     );
 
     res.json({

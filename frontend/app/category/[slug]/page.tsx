@@ -30,19 +30,21 @@ export default function CategoryPage() {
   const fetchCategoryListings = async () => {
     try {
       // Handle free-giveaways as a special filter, not a category
-      const params = slug === 'free-giveaways' 
-        ? { is_free: 'true' } 
-        : { category: slug }
-      
-      const data = await fetchListings(params)
-      setListings(data.listings || [])
-      
       if (slug === 'free-giveaways') {
+        const data = await fetchListings({ is_free: 'true' })
+        setListings(data.listings || [])
         setCategoryName('Free Giveaways')
-      } else if (data.listings && data.listings.length > 0) {
-        setCategoryName(data.listings[0].category_name)
       } else {
-        setCategoryName(slug.charAt(0).toUpperCase() + slug.slice(1))
+        // Fetch category info first to get the correct name
+        const categoryResponse = await fetch(`http://localhost:4000/api/v1/categories/${slug}`)
+        if (categoryResponse.ok) {
+          const categoryData = await categoryResponse.json()
+          setCategoryName(categoryData.name)
+        }
+        
+        // Then fetch listings
+        const data = await fetchListings({ category: slug })
+        setListings(data.listings || [])
       }
     } catch (error) {
       console.error('Error fetching listings:', error)
