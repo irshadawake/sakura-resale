@@ -26,6 +26,12 @@ export default function CreateListingPage() {
     price_per_item: false,
   })
 
+  const [bundleItems, setBundleItems] = useState<Array<{
+    name: string
+    condition: string
+    description: string
+  }>>([])
+
   const selectedCategory = categories.find(c => c.id === formData.category_id)
   const isBundleSaleCategory = selectedCategory?.slug === 'bulk-sale'
 
@@ -86,8 +92,19 @@ export default function CreateListingPage() {
 
       // Add bundle sale fields if applicable
       if (isBundleSaleCategory) {
+        if (bundleItems.length === 0) {
+          toast.error('Please add at least one item to the bundle')
+          setLoading(false)
+          return
+        }
+        
+        // Convert bundle items array to formatted description
+        const itemsDescription = bundleItems.map((item, index) => 
+          `${index + 1}. ${item.name} - ${item.condition}${item.description ? ` (${item.description})` : ''}`
+        ).join('\n')
+        
         submitData.append('is_bulk_sale', 'true')
-        submitData.append('bulk_items_description', formData.bulk_items_description)
+        submitData.append('bulk_items_description', itemsDescription)
         submitData.append('price_per_item', formData.price_per_item ? 'true' : 'false')
       }
 
@@ -112,6 +129,20 @@ export default function CreateListingPage() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     })
+  }
+
+  const addBundleItem = () => {
+    setBundleItems([...bundleItems, { name: '', condition: 'Good', description: '' }])
+  }
+
+  const removeBundleItem = (index: number) => {
+    setBundleItems(bundleItems.filter((_, i) => i !== index))
+  }
+
+  const updateBundleItem = (index: number, field: string, value: string) => {
+    const updated = [...bundleItems]
+    updated[index] = { ...updated[index], [field]: value }
+    setBundleItems(updated)
   }
 
   const japanPrefectures = [
@@ -193,40 +224,93 @@ export default function CreateListingPage() {
 
           {/* Bundle Sale Fields */}
           {isBundleSaleCategory && (
-            <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6 space-y-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <span className="text-2xl">📦</span>
-                <h3 className="text-lg font-semibold text-orange-900">Bundle Sale Details</h3>
-              </div>
-              
-              <div>
-                <label htmlFor="bulk_items_description" className="block text-sm font-medium text-gray-700 mb-2">
-                  List of Items in Bundle <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="bulk_items_description"
-                  name="bulk_items_description"
-                  required={isBundleSaleCategory}
-                  rows={6}
-                  value={formData.bulk_items_description}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="List all items included in this bundle:
-e.g.,
-- Queen bed with mattress
-- 2-seater sofa (gray)
-- Dining table with 4 chairs
-- TV stand
-- Microwave oven
-- Rice cooker
-- Vacuum cleaner"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  List each item clearly. Buyers want to know exactly what they're getting!
-                </p>
+            <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">📦</span>
+                  <h3 className="text-lg font-semibold text-orange-900">Bundle Sale Items</h3>
+                </div>
+                <div className="text-sm text-orange-700">
+                  {bundleItems.length} {bundleItems.length === 1 ? 'item' : 'items'} added
+                </div>
               </div>
 
-              <div>
+              {/* Add Item Button */}
+              <button
+                type="button"
+                onClick={addBundleItem}
+                className="w-full border-2 border-dashed border-orange-300 rounded-lg p-4 text-orange-600 hover:bg-orange-100 hover:border-orange-400 transition-colors"
+              >
+                <span className="text-xl mr-2">+</span>
+                Add Item to Bundle
+              </button>
+
+              {/* Bundle Items List */}
+              <div className="space-y-4">
+                {bundleItems.map((item, index) => (
+                  <div key={index} className="bg-white rounded-lg p-4 border border-orange-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-700">Item #{index + 1}</h4>
+                      <button
+                        type="button"
+                        onClick={() => removeBundleItem(index)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        × Remove
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Item Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={item.name}
+                          onChange={(e) => updateBundleItem(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="e.g., Queen bed with mattress"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Condition <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          value={item.condition}
+                          onChange={(e) => updateBundleItem(index, 'condition', e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="Like New">Like New</option>
+                          <option value="Good">Good</option>
+                          <option value="Fair">Fair</option>
+                          <option value="Poor">Poor</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Additional Details
+                      </label>
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateBundleItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Size, color, brand, etc. (optional)"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pricing Model */}
+              <div className="bg-white rounded-lg p-4 border border-orange-200">
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -241,21 +325,22 @@ e.g.,
                     </span>
                     <p className="text-xs text-gray-600 mt-1">
                       Check this if the price shown is for each individual item.
-                      Example: ¥2,000 per item × 10 items = ¥20,000 total
+                      Example: ¥2,000 per item × {bundleItems.length || 'X'} items = ¥{formData.price ? (parseInt(formData.price) * bundleItems.length).toLocaleString() : 'X,XXX'} total
                     </p>
                   </div>
                 </label>
               </div>
 
+              {/* Tips */}
               <div className="bg-white rounded-lg p-4 border border-orange-200">
                 <p className="text-sm text-gray-700">
                   <strong>💡 Bundle Sale Tips:</strong>
                 </p>
                 <ul className="text-sm text-gray-600 mt-2 space-y-1 list-disc list-inside">
-                  <li>Be specific about item conditions</li>
+                  <li>Add each item separately with its own condition</li>
                   <li>Include measurements for furniture</li>
-                  <li>Mention if items must be sold together</li>
-                  <li>Take photos of all items if possible</li>
+                  <li>Specify colors, brands, sizes in details</li>
+                  <li>Upload photos showing all items</li>
                 </ul>
               </div>
             </div>
