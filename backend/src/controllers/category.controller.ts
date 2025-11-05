@@ -5,17 +5,26 @@ export async function getCategories(req: Request, res: Response) {
   try {
     const { parent_only } = req.query;
     
-    let sql = `SELECT c.*, 
+    let sql;
+    
+    // If parent_only=true, include counts from subcategories
+    if (parent_only === 'true') {
+      sql = `SELECT c.*, 
+              (SELECT COUNT(*) 
+               FROM listings l 
+               WHERE (l.category_id = c.id 
+                      OR l.category_id IN (SELECT id FROM categories WHERE parent_id = c.id))
+                 AND l.status = 'active') as items_count
+       FROM categories c 
+       WHERE c.is_active = true AND c.parent_id IS NULL
+       ORDER BY c.display_order, c.name`;
+    } else {
+      sql = `SELECT c.*, 
               (SELECT COUNT(*) FROM listings l WHERE l.category_id = c.id AND l.status = 'active') as items_count
        FROM categories c 
-       WHERE c.is_active = true`;
-    
-    // If parent_only=true, only return top-level categories
-    if (parent_only === 'true') {
-      sql += ` AND c.parent_id IS NULL`;
+       WHERE c.is_active = true
+       ORDER BY c.display_order, c.name`;
     }
-    
-    sql += ` ORDER BY c.display_order, c.name`;
     
     const result = await query(sql);
 
