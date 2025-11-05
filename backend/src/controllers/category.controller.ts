@@ -10,11 +10,16 @@ export async function getCategories(req: Request, res: Response) {
     // If parent_only=true, include counts from subcategories
     if (parent_only === 'true') {
       sql = `SELECT c.*, 
-              (SELECT COUNT(*) 
-               FROM listings l 
-               WHERE (l.category_id = c.id 
-                      OR l.category_id IN (SELECT id FROM categories WHERE parent_id = c.id))
-                 AND l.status = 'active') as items_count
+              CASE 
+                WHEN c.slug = 'free-giveaways' THEN 
+                  (SELECT COUNT(*) FROM listings l WHERE l.is_free = true AND l.status = 'active')
+                ELSE
+                  (SELECT COUNT(*) 
+                   FROM listings l 
+                   WHERE (l.category_id = c.id 
+                          OR l.category_id IN (SELECT id FROM categories WHERE parent_id = c.id))
+                     AND l.status = 'active')
+              END as items_count
        FROM categories c 
        WHERE c.is_active = true AND c.parent_id IS NULL
        ORDER BY c.display_order, c.name`;

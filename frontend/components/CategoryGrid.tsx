@@ -14,6 +14,8 @@ export default function CategoryGrid() {
       const response = await axios.get('http://localhost:4000/api/v1/categories?parent_only=true')
       return response.data
     },
+    staleTime: 30000, // 30 seconds
+    refetchOnMount: true,
   })
 
   // Show only first 12 categories
