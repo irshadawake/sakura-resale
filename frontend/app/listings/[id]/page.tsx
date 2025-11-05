@@ -196,12 +196,15 @@ export default function ListingDetailPage() {
                 </h2>
                 <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                   <ul className="space-y-2">
-                    {listing.bulk_items_description.split('\n').map((item, index) => (
-                      <li key={index} className="text-gray-700 flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                    {listing.bulk_items_description
+                      .split(/\r?\n/)
+                      .filter(item => item.trim())
+                      .map((item, index) => (
+                        <li key={index} className="text-gray-700 flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </div>

@@ -95,19 +95,23 @@ export default function EditListingPage() {
 
       // Parse bundle items if it's a bundle sale
       if (listing.is_bulk_sale && listing.bulk_items_description) {
-        const items = listing.bulk_items_description.split('\n').map((line: string) => {
-          const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(.+?)(?:\s*\((.*)\))?$/)
-          if (match) {
-            return {
-              name: match[1].trim(),
-              condition: match[2].trim(),
-              description: match[3]?.trim() || '',
-              price: '',
-              can_sell_separately: false
+        const items = listing.bulk_items_description
+          .split(/\r?\n/)
+          .filter(line => line.trim())
+          .map((line: string) => {
+            const match = line.match(/^\d+\.\s*(.+?)\s*-\s*(.+?)(?:\s*\((.*)\))?$/)
+            if (match) {
+              return {
+                name: match[1].trim(),
+                condition: match[2].trim(),
+                description: match[3]?.trim() || '',
+                price: '',
+                can_sell_separately: false
+              }
             }
-          }
-          return null
-        }).filter(Boolean)
+            return null
+          })
+          .filter(Boolean)
         setBundleItems(items as any)
       }
     } catch (error) {
